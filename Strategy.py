@@ -1,94 +1,104 @@
-import pandas as pd
-import numpy as np
-from basicExpectation import dealerStanding, dealerBustProb
-card_value = ["A",2,3,4,5,6,7,8,9,10]
-# possible values of player's initial value
-p_initial_value = range(5,22)
+import time
+from MyDataBase import *
+from basicExpectation import Expectation, doubleExpectation, splitExpectation, standingExpectation, hitExpectation
 
 
-# Initialize table to store the strategy
-strat_df = pd.DataFrame(columns=["A",2,3,4,5,6,7,8,9,10], index=range(5,22))
-# If initial value is 21, then stand
-strat_df.loc[21:] = "S"
+# When search strategy, should follow the order of hard, soft and pair
+def Search_opt_strat(ptype, pair_ind):
+    """
+    Iterate all possible combinations of player card and dealer card and
+    compute expectation and find the optimal strategy
 
-# Initialize table to store the conditional expectation for each action
-
-# total bet
-def standingExpectation(p, d, ptype, dtype):
-    expectation = 0
-    dealer_bust_prob = dealerBustProb(d, dtype)
-    # Calculate standing expectation when p's value is 21
-    if p==21:
-        dealer_stand_prob = 0
-        for i in range(17, 21):
-            dealer_stand_prob += dealerStanding(d, i, dtype)
-        # Player get BJ
-        expectation = 1.5* (dealer_bust_prob+dealer_stand_prob)
-
+    :param ptype: player's card type
+    :param pair_ind: dealer's card type
+    """
+    if pair_ind != "pair" and ptype == "hard":
+        p_initial_value = hard_player_value
+    elif pair_ind != "pair" and ptype == "soft":
+        p_initial_value = soft_player_value
     else:
-
-        expectation = dealer_bust_prob * 1 + expectation
-        for j in range(17, 22):
-            if j < p:
-                expectation = dealerStanding(d, j, dtype) * 1 + expectation
-            elif j > p:
-                expectation = dealerStanding(d, j, dtype) * (-1) + expectation
-
-
-    return expectation
-
-
-
-def hitExpectation(p, d, ptype, dtype):
-    expectation = 0
-    if ptype == 'hard':
-        if p <= 10:
-            for i in range(2, 11):
-                expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
-            expectation = expectation + (1/13) * Expectation(p + 11, d, 'soft', dtype)
-        if p >= 11:
-            for i in range(1, 21-p+1):
-                expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
-            for i in range(21-p+1, 11):
-                expectation = expectation + ((1/13) + (1/13)*(i==10)*3) * (-1)
-
-    if ptype == 'soft':
-        if p == 11:
-            for i in range(1, 11):
-                expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
-
-        if p >= 12:
-            for i in range(1, 21-p+1):
-                expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
-            for j in range(21-p+1, 11):
-                expectation = Expectation(p+j-10, d, 'hard', dtype) * ((1/13) + (1/13)*(j==10)*3) + expectation
-
-
-    return expectation
-
-
-
-def Expectation(p, d, ptype, dtype):
-    if p == 21:
-        return
-    return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype)])
-
-
-# Case 1: Hard, no pair
-def Search_opt_strat(ptype, dtype):
+        p_initial_value = pair_value
     for d in card_value:
-        for p0 in list(p_initial_value)[::-2]:
+        if d == 1:
+            dtype = "soft"
+        else:
+            dtype = "hard"
 
-            h_expec = hitExpectation(p0, d, ptype, dtype)
-            s_expec = standingExpectation(p0, d, ptype, dtype)
-            d_expec = DoubleExpectation(p0, d, ptype, dtype)
-            #Sp_expec = Sp_Expect(p0, d, ptype, dtype)
-            max_id = np.argmax([h_expec, s_expec, d_expec])
-            if max_id == 0:
-                strat_df.loc[p0, d] = "H"
-            elif max_id == 1:
-                strat_df.loc[p0, d] = "S"
+        # p0 is the total card value. For AA case, p0=22. p_initial means player's starting value
+        # for un-spliting case, so p_initial=12.
+        for p0 in p_initial_value[::-1]:
+            print("Begin to calculate strategy for (%s, %s, %s, %s, %s)"%(p0, d, ptype, dtype, pair_ind))
+            if pair_ind == "pair" and p0 == 22:
+                p_initial = 12
+                ptype = "soft"
+            elif pair_ind == "pair" and p0 < 22:
+                ptype = "hard"
+                p_initial = p0
             else:
-                strat_df.loc[p0, d] = "D"
+                p_initial = p0
+            # Calculate expectation for each action
+            h_expect = hitExpectation(p_initial, d, ptype, dtype)
+            s_expect = standingExpectation(p_initial, d, ptype, dtype)
+            d_expect = doubleExpectation(p_initial, d, ptype, dtype)
+            if pair_ind == "pair":
+                expect_list = [h_expect, s_expect, d_expect, splitExpectation(p0, d, ptype, dtype)]
+            else:
+                expect_list = [h_expect, s_expect, d_expect]
+            # Compute the maximum expectation
+            max_id = np.argmax(expect_list)
+            # Save strategy and expect into table
+            if pair_ind == "pair":
+                strat_dict["pair"].loc[p0, d] = strategy_list[max_id]
+                expect_dict["pair"].loc[p0, d] = expect_list[max_id]
+            else:
+                strat_dict[ptype].loc[p_initial, d] = strategy_list[max_id]
+                expect_dict[ptype].loc[p_initial, d] = expect_list[max_id]
+            print("Optimal Strategy for (%s, %s, %s, %s) is %s with expectation %s"%(p0, d, ptype, dtype, strategy_list[max_id], expect_list[max_id]))
 
 
+if __name__ == "__main__":
+    s = time.time()
+
+    ptype = "hard"
+    pair_ind = "not pair"
+    Search_opt_strat(ptype, pair_ind)
+    ptype = "soft"
+    Search_opt_strat(ptype, pair_ind)
+    pair_ind = "pair"
+    Search_opt_strat(ptype, pair_ind)
+
+    print("#######################################################")
+    print("hard strategy table")
+    print(strat_dict["hard"])
+
+    print("hard expect table")
+    print(expect_dict["hard"])
+    print("#######################################################")
+
+    print("soft strategy table")
+    print(strat_dict["soft"])
+
+    print("soft expect table")
+    print(expect_dict["soft"])
+    print("#######################################################")
+
+
+    print("pair strategy table")
+    print(strat_dict["pair"])
+
+    print("pair expect table")
+    print(expect_dict["pair"])
+
+    print("#######################################################")
+
+
+    print("Begin to write table")
+    hard_table = pd.concat([strat_dict["hard"], expect_dict["hard"]]).to_csv("output/hard_table.csv")
+    soft_table = pd.concat([strat_dict["soft"], expect_dict["soft"]]).to_csv("output/soft_table.csv")
+    pair_table = pd.concat([strat_dict["pair"], expect_dict["pair"]]).to_csv("output/pair_table.csv")
+    expect_dict["hit"].to_csv("output/hit_expectation.csv")
+    expect_dict["stand"].to_csv("output/stand_expectation.csv")
+
+
+    e = time.time()
+    print("code running time is %s" %(e - s))

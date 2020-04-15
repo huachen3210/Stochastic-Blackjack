@@ -1,10 +1,7 @@
-import time
-
 __author__ = ['gecheng', "Huachen Ren"]
 
 import time
-
-p_next = 1/13
+from MyDataBase import *
 
 ### calculate bust probability of dealer
 ##########################
@@ -97,15 +94,19 @@ def dealerStanding(d, g, type):
 # type : type of point for dealer        soft or hard
 ##########################
 def standingExpectation(p, d, ptype, dtype):
-    expectation = 0
-    expectation = dealerBustProb(d, dtype) * 1 + expectation
-    for j in range(17, 22):
-        if j < p:
-            expectation = dealerStanding(d, j, dtype) * 1 + expectation
-        elif j > p:
-            expectation = dealerStanding(d, j, dtype) * (-1) + expectation
+    # check whether the expecation was computed
+    if expect_dict["stand"].loc[p, d] == 0:
+        expectation = 0
+        expectation = dealerBustProb(d, dtype) * 1 + expectation
+        for j in range(17, 22):
+            if j < p:
+                expectation = dealerStanding(d, j, dtype) * 1 + expectation
+            elif j > p:
+                expectation = dealerStanding(d, j, dtype) * (-1) + expectation
+        return expectation
 
-    return expectation
+    else:
+        return expect_dict["stand"].loc[p, d]
 
 
 
@@ -117,29 +118,33 @@ def standingExpectation(p, d, ptype, dtype):
 # type : type of point for dealer        soft or hard
 ##########################
 def hitExpectation(p, d, ptype, dtype):
-    expectation = 0
-    if ptype == 'hard':
-        if p <= 10:
-            for i in range(2, 11):
-                expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
-            expectation = expectation + (1/13) * Expectation(p + 11, d, 'soft', dtype)
-        if p >= 11:
-            for i in range(1, 21-p+1):
-                expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
-            for i in range(21-p+1, 11):
-                expectation = expectation + ((1/13) + (1/13)*(i==10)*3) * (-1)
+    # check whether the expecation was computed
+    if expect_dict["hit"].loc[p, d] == 0:
+        expectation = 0
+        if ptype == 'hard':
+            if p <= 10:
+                for i in range(2, 11):
+                    expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
+                expectation = expectation + (1/13) * Expectation(p + 11, d, 'soft', dtype)
+            if p >= 11:
+                for i in range(1, 21-p+1):
+                    expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
+                for i in range(21-p+1, 11):
+                    expectation = expectation + ((1/13) + (1/13)*(i==10)*3) * (-1)
 
-    if ptype == 'soft':
-        if p == 11:
-            for i in range(1, 11):
-                expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
+        if ptype == 'soft':
+            if p == 11:
+                for i in range(1, 11):
+                    expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
 
-        if p >= 12:
-            for i in range(1, 21-p+1):
-                expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
-            for j in range(21-p+1, 11):
-                expectation = Expectation(p+j-10, d, 'hard', dtype) * ((1/13) + (1/13)*(j==10)*3) + expectation
-    return expectation
+            if p >= 12:
+                for i in range(1, 21-p+1):
+                    expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
+                for j in range(21-p+1, 11):
+                    expectation = Expectation(p+j-10, d, 'hard', dtype) * ((1/13) + (1/13)*(j==10)*3) + expectation
+        return expectation
+    else:
+        return expect_dict["hit"].loc[p, d]
 
 
 def doubleExpectation(p, d, ptype, dtype):
@@ -152,7 +157,7 @@ def doubleExpectation(p, d, ptype, dtype):
         if p<=10:
             expectation += 2*standingExpectation(p+11, d, "soft", dtype)*p_next
         # get A, hard
-        else:
+        elif p<21:
             expectation += 2*standingExpectation(p+1, d, ptype, dtype)*p_next
         # bust
         for i in range(min(21-p+1, 11), 11):
@@ -164,6 +169,8 @@ def doubleExpectation(p, d, ptype, dtype):
         for j in range(21 - p + 1, 11):
             expectation += 2*standingExpectation(p + j - 10, d, 'hard', dtype) * (p_next + p_next* (j == 10) * 3)
     return expectation
+
+
 
 def splitExpectation(p, d, ptype, dtype):
 
@@ -179,33 +186,42 @@ def splitExpectation(p, d, ptype, dtype):
     return expectation
 
 def Expectation(p, d, ptype, dtype):
-    # return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
-    #             doubleExpectation(p, d, ptype, dtype), splitExpectation(p, d, ptype, dtype)])
-    # #return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
-    #             doubleExpectation(p, d, ptype, dtype)])
-    # if initial_ind and pair_ind:
-    #     return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
-    #                 doubleExpectation(p, d, ptype, dtype), splitExpectation(p, d, ptype, dtype)])
-    # elif initial_ind:
-    #     return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
-    #                 doubleExpectation(p, d, ptype, dtype)])
-    return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype)])
+    # check whether the strategy was computed
+    if strat_dict[ptype].loc[p,d]=="0":
+        # First check whether expectation exists. If not
+        # Compute hit expectation and stand expectation
+        if expect_dict["hit"].loc[p, d] == 0:
+            # have not calculate hit expectation
+            hit_expect = hitExpectation(p, d, ptype, dtype)
+            expect_dict["hit"].loc[p, d] = hit_expect
+
+        else:
+            hit_expect = expect_dict["hit"].loc[p, d]
+
+        if expect_dict["stand"].loc[p, d] == 0:
+            # have not calculate stand expectation
+            stand_expect = standingExpectation(p, d, ptype, dtype)
+            expect_dict["stand"].loc[p, d] = stand_expect
+        else:
+            stand_expect = expect_dict["stand"].loc[p, d]
+
+        # choose optimal action
+        if hit_expect >= stand_expect:
+            expect = hit_expect
+            # update strategy table
+            strat_dict[ptype].loc[p, d] = "H"
+        else:
+            expect = stand_expect
+            strat_dict[ptype].loc[p, d] = "S"
+        # update expectation table
+        expect_dict[ptype].loc[p, d] = expect
+        return expect
+    else:
+        return expect_dict[ptype].loc[p, d]
 
 
 
-### Example
-
-s = time.time()
-
-p = 14
-d = 9
-print(hitExpectation(p, d, 'hard', 'hard'))
-print(standingExpectation(p, d, 'hard', 'hard'))
-
-
-e = time.time()
-
-print(e - s)
+    #return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype)])
 
 if __name__ == "__main__":
 
@@ -214,8 +230,8 @@ if __name__ == "__main__":
     p = 18
     d = 6
     double_ind = True
-    split_ind = False
-    ptype = "soft"
+    split_ind = True
+    ptype = "hard"
     dtype = "hard"
     print("hit expectation is ", hitExpectation(p, d, ptype, dtype))
     print("stand expectation is ", standingExpectation(p, d, ptype, dtype))
@@ -223,6 +239,14 @@ if __name__ == "__main__":
         print("double expectation is ", doubleExpectation(p, d, ptype, dtype))
     if split_ind:
         print("split expectation is ", splitExpectation(p, d, ptype, dtype))
+
+    print("strategy table")
+    print(strat_dict[ptype])
+    #print("pair table")
+
+    print("expect table")
+    print(expect_dict[ptype])
+
 
     e = time.time()
     print("code running time is %s" %(e - s))
