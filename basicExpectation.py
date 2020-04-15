@@ -1,7 +1,10 @@
-__author__ = 'gecheng'
+import time
+
+__author__ = ['gecheng', "Huachen Ren"]
 
 import time
 
+p_next = 1/13
 
 ### calculate bust probability of dealer
 ##########################
@@ -139,9 +142,53 @@ def hitExpectation(p, d, ptype, dtype):
     return expectation
 
 
+def doubleExpectation(p, d, ptype, dtype):
+    expectation = 0
+    if ptype == "hard":
+        # not bust
+        for i in range(2, min(21-p+1, 11)):
+            expectation += 2*standingExpectation(p+i, d, ptype, dtype)*(p_next + p_next*(i==10)*3)
+        # get A, convert to soft
+        if p<=10:
+            expectation += 2*standingExpectation(p+11, d, "soft", dtype)*p_next
+        # get A, hard
+        else:
+            expectation += 2*standingExpectation(p+1, d, ptype, dtype)*p_next
+        # bust
+        for i in range(min(21-p+1, 11), 11):
+            expectation += -2*(p_next + p_next*(i==10)*3)
+    else:
+        # Since When only have one A, you can't choose double, we don't consider p=11
+        for i in range(1, 21 - p + 1):
+            expectation += 2*standingExpectation(p + i, d, ptype, dtype) * (p_next + p_next*(i == 10) * 3)
+        for j in range(21 - p + 1, 11):
+            expectation += 2*standingExpectation(p + j - 10, d, 'hard', dtype) * (p_next + p_next* (j == 10) * 3)
+    return expectation
 
+def splitExpectation(p, d, ptype, dtype):
+
+    expectation = 0
+    if ptype == "soft":
+        # If split 2 A, then must get one more card and stand
+        for i in range(1, 11):
+            for j in range(1, 11):
+                expectation += standingExpectation(11+i, d, ptype, dtype)*(p_next + p_next*(i==10)*3)\
+                            + standingExpectation(11+j, d, ptype, dtype)*(p_next + p_next*(i==10)*3)
+    else:
+        expectation += 2*hitExpectation(int(p/2), d, ptype, dtype)
+    return expectation
 
 def Expectation(p, d, ptype, dtype):
+    # return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
+    #             doubleExpectation(p, d, ptype, dtype), splitExpectation(p, d, ptype, dtype)])
+    # #return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
+    #             doubleExpectation(p, d, ptype, dtype)])
+    # if initial_ind and pair_ind:
+    #     return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
+    #                 doubleExpectation(p, d, ptype, dtype), splitExpectation(p, d, ptype, dtype)])
+    # elif initial_ind:
+    #     return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype),
+    #                 doubleExpectation(p, d, ptype, dtype)])
     return max([hitExpectation(p, d, ptype, dtype), standingExpectation(p, d, ptype, dtype)])
 
 
@@ -159,4 +206,24 @@ print(standingExpectation(p, d, 'hard', 'hard'))
 e = time.time()
 
 print(e - s)
+
+if __name__ == "__main__":
+
+    s = time.time()
+
+    p = 18
+    d = 6
+    double_ind = True
+    split_ind = False
+    ptype = "soft"
+    dtype = "hard"
+    print("hit expectation is ", hitExpectation(p, d, ptype, dtype))
+    print("stand expectation is ", standingExpectation(p, d, ptype, dtype))
+    if double_ind:
+        print("double expectation is ", doubleExpectation(p, d, ptype, dtype))
+    if split_ind:
+        print("split expectation is ", splitExpectation(p, d, ptype, dtype))
+
+    e = time.time()
+    print("code running time is %s" %(e - s))
 
