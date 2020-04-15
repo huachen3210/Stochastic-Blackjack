@@ -187,7 +187,7 @@ def splitExpectation(p, d, ptype, dtype):
 
 def Expectation(p, d, ptype, dtype):
     # check whether the strategy was computed
-    if strat_dict[ptype].loc[p,d]=="0":
+    if strat_dict[ptype].loc[p, d] == "0":
         # First check whether expectation exists. If not
         # Compute hit expectation and stand expectation
         if expect_dict["hit"].loc[p, d] == 0:
@@ -206,7 +206,7 @@ def Expectation(p, d, ptype, dtype):
             stand_expect = expect_dict["stand"].loc[p, d]
 
         # choose optimal action
-        if hit_expect >= stand_expect:
+        if hit_expect > stand_expect:
             expect = hit_expect
             # update strategy table
             strat_dict[ptype].loc[p, d] = "H"
@@ -227,12 +227,12 @@ if __name__ == "__main__":
 
     s = time.time()
 
-    p = 18
-    d = 6
-    double_ind = True
-    split_ind = True
+    p = 8
+    d = 11
+    double_ind = False
+    split_ind = False
     ptype = "hard"
-    dtype = "hard"
+    dtype = "soft"
     print("hit expectation is ", hitExpectation(p, d, ptype, dtype))
     print("stand expectation is ", standingExpectation(p, d, ptype, dtype))
     if double_ind:

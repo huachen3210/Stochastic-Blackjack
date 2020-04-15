@@ -1,3 +1,4 @@
+import os
 import time
 from MyDataBase import *
 from basicExpectation import Expectation, doubleExpectation, splitExpectation, standingExpectation, hitExpectation
@@ -19,7 +20,7 @@ def Search_opt_strat(ptype, pair_ind):
     else:
         p_initial_value = pair_value
     for d in card_value:
-        if d == 1:
+        if d == 11:
             dtype = "soft"
         else:
             dtype = "hard"
@@ -91,13 +92,15 @@ if __name__ == "__main__":
 
     print("#######################################################")
 
+    if not os.path.exists("./output"):
+        os.makedirs("./output")
 
     print("Begin to write table")
-    hard_table = pd.concat([strat_dict["hard"], expect_dict["hard"]]).to_csv("output/hard_table.csv")
-    soft_table = pd.concat([strat_dict["soft"], expect_dict["soft"]]).to_csv("output/soft_table.csv")
-    pair_table = pd.concat([strat_dict["pair"], expect_dict["pair"]]).to_csv("output/pair_table.csv")
-    expect_dict["hit"].to_csv("output/hit_expectation.csv")
-    expect_dict["stand"].to_csv("output/stand_expectation.csv")
+    hard_table = pd.concat([strat_dict["hard"], expect_dict["hard"]]).to_csv("output/hard_table")
+    soft_table = pd.concat([strat_dict["soft"], expect_dict["soft"]]).to_csv("output/soft_table")
+    pair_table = pd.concat([strat_dict["pair"], expect_dict["pair"]]).to_csv("output/pair_table")
+    expect_dict["hit"].to_csv("output/hit_expectation")
+    expect_dict["stand"].to_csv("output/stand_expectation")
 
 
     e = time.time()

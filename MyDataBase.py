@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 # possible values of player's initial value
-card_value = [1,2,3,4,5,6,7,8,9,10]
+card_value = [2,3,4,5,6,7,8,9,10,11]
 
 # possible initial values for hard type, soft type and pair type
 hard_player_value = list(range(4,22))
