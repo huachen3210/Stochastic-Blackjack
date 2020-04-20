@@ -29,10 +29,14 @@ strat_dict = {"hard":hard_strat_df, "soft":soft_strat_df, "pair":pair_strat_df}
 hard_expect_df = pd.DataFrame(0, columns=card_value, index=hard_player_value)
 soft_expect_df = pd.DataFrame(0, columns=card_value, index=soft_player_value)
 pair_expect_df = pd.DataFrame(0, columns=card_value, index=pair_value)
-standing_expect_df = pd.DataFrame(0, columns=card_value, index=range(2,22))
-hit_expect_df = pd.DataFrame(0, columns=card_value, index=range(2,22))
+standing_hard_expect_df = pd.DataFrame(0, columns=card_value, index=hard_player_value)
+hit_hard_expect_df = pd.DataFrame(0, columns=card_value, index=hard_player_value)
+standing_soft_expect_df = pd.DataFrame(0, columns=card_value, index=soft_player_value)
+hit_soft_expect_df = pd.DataFrame(0, columns=card_value, index=soft_player_value)
+
 expect_dict = {"hard":hard_expect_df, "soft":soft_expect_df, "pair":pair_expect_df,
-               "stand": standing_expect_df, "hit":hit_expect_df}
+               "hard_stand": standing_hard_expect_df, "hard_hit":hit_hard_expect_df,
+               "soft_stand":standing_soft_expect_df, "soft_hit":hit_soft_expect_df}
 
 # H for hit, S for stand, D for double, SP for split
 strategy_list = ["H", "S", "D", "SP"]

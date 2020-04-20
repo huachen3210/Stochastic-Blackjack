@@ -1,7 +1,7 @@
 import os
 import time
 from MyDataBase import *
-from basicExpectation import Expectation, doubleExpectation, splitExpectation, standingExpectation, hitExpectation
+from basicExpectation import doubleExpectation, splitExpectation, standingExpectation, hitExpectation
 
 
 # When search strategy, should follow the order of hard, soft and pair
@@ -99,9 +99,10 @@ if __name__ == "__main__":
     hard_table = pd.concat([strat_dict["hard"], expect_dict["hard"]]).to_csv("output/hard_table")
     soft_table = pd.concat([strat_dict["soft"], expect_dict["soft"]]).to_csv("output/soft_table")
     pair_table = pd.concat([strat_dict["pair"], expect_dict["pair"]]).to_csv("output/pair_table")
-    expect_dict["hit"].to_csv("output/hit_expectation")
-    expect_dict["stand"].to_csv("output/stand_expectation")
-
+    expect_dict["hard_hit"].to_csv("output/hard_hit_expectation")
+    expect_dict["hard_stand"].to_csv("output/hard_stand_expectation")
+    expect_dict["soft_hit"].to_csv("output/soft_hit_expectation")
+    expect_dict["soft_stand"].to_csv("output/soft_stand_expectation")
 
     e = time.time()
     print("code running time is %s" %(e - s))

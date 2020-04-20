@@ -95,7 +95,7 @@ def dealerStanding(d, g, type):
 ##########################
 def standingExpectation(p, d, ptype, dtype):
     # check whether the expecation was computed
-    if expect_dict["stand"].loc[p, d] == 0:
+    if expect_dict[ptype+"_stand"].loc[p, d] == 0:
         expectation = 0
         expectation = dealerBustProb(d, dtype) * 1 + expectation
         for j in range(17, 22):
@@ -106,7 +106,14 @@ def standingExpectation(p, d, ptype, dtype):
         return expectation
 
     else:
-        return expect_dict["stand"].loc[p, d]
+        return expect_dict[ptype+"_stand"].loc[p, d]
+
+def BJ_standingExpectation(d, dtype):
+    expectation = 0
+    expectation = dealerBustProb(d, dtype) * 1.5 + expectation
+    for j in range(17, 21):
+        expectation = dealerStanding(d, j, dtype) * 1.5 + expectation
+    return expectation
 
 
 
@@ -119,7 +126,7 @@ def standingExpectation(p, d, ptype, dtype):
 ##########################
 def hitExpectation(p, d, ptype, dtype):
     # check whether the expecation was computed
-    if expect_dict["hit"].loc[p, d] == 0:
+    if expect_dict[ptype+"_hit"].loc[p, d] == 0:
         expectation = 0
         if ptype == 'hard':
             if p <= 10:
@@ -144,7 +151,7 @@ def hitExpectation(p, d, ptype, dtype):
                     expectation = Expectation(p+j-10, d, 'hard', dtype) * ((1/13) + (1/13)*(j==10)*3) + expectation
         return expectation
     else:
-        return expect_dict["hit"].loc[p, d]
+        return expect_dict[ptype+"_hit"].loc[p, d]
 
 
 def doubleExpectation(p, d, ptype, dtype):
@@ -173,16 +180,27 @@ def doubleExpectation(p, d, ptype, dtype):
 
 
 def splitExpectation(p, d, ptype, dtype):
-
     expectation = 0
     if ptype == "soft":
         # If split 2 A, then must get one more card and stand
+        for j in range(1, 11):
+            if j == 10:
+                expectation += BJ_standingExpectation(d, dtype)*p_next*4
+            else:
+                expectation += standingExpectation(11+j, d, ptype, dtype)*p_next
+    elif p == 20:
         for i in range(1, 11):
-            for j in range(1, 11):
-                expectation += standingExpectation(11+i, d, ptype, dtype)*(p_next + p_next*(i==10)*3)\
-                            + standingExpectation(11+j, d, ptype, dtype)*(p_next + p_next*(i==10)*3)
+            if i == 1:
+                expectation += BJ_standingExpectation(d, dtype)*p_next
+            else:
+                expectation += Expectation(10+i, d, ptype, dtype)*(p_next + p_next*(i == 10) * 3)
     else:
-        expectation += 2*hitExpectation(int(p/2), d, ptype, dtype)
+        for i in range(1, 11):
+            if i == 1:
+                expectation += Expectation(int(p / 2)+11, d, "soft", dtype)*p_next
+            else:
+                expectation += Expectation(int(p / 2)+i, d, "hard", dtype)*(p_next + p_next*(i == 10) * 3)
+
     return expectation
 
 def Expectation(p, d, ptype, dtype):
@@ -190,20 +208,20 @@ def Expectation(p, d, ptype, dtype):
     if strat_dict[ptype].loc[p, d] == "0":
         # First check whether expectation exists. If not
         # Compute hit expectation and stand expectation
-        if expect_dict["hit"].loc[p, d] == 0:
+        if expect_dict[ptype+"_hit"].loc[p, d] == 0:
             # have not calculate hit expectation
             hit_expect = hitExpectation(p, d, ptype, dtype)
-            expect_dict["hit"].loc[p, d] = hit_expect
+            expect_dict[ptype+"_hit"].loc[p, d] = hit_expect
 
         else:
-            hit_expect = expect_dict["hit"].loc[p, d]
+            hit_expect = expect_dict[ptype+"_hit"].loc[p, d]
 
-        if expect_dict["stand"].loc[p, d] == 0:
+        if expect_dict[ptype+"_stand"].loc[p, d] == 0:
             # have not calculate stand expectation
             stand_expect = standingExpectation(p, d, ptype, dtype)
-            expect_dict["stand"].loc[p, d] = stand_expect
+            expect_dict[ptype+"_stand"].loc[p, d] = stand_expect
         else:
-            stand_expect = expect_dict["stand"].loc[p, d]
+            stand_expect = expect_dict[ptype+"_stand"].loc[p, d]
 
         # choose optimal action
         if hit_expect > stand_expect:
