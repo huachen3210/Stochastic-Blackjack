@@ -131,24 +131,24 @@ def hitExpectation(p, d, ptype, dtype):
         if ptype == 'hard':
             if p <= 10:
                 for i in range(2, 11):
-                    expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
-                expectation = expectation + (1/13) * Expectation(p + 11, d, 'soft', dtype)
+                    expectation = expect_dict["hard"].loc[p+i, d] * ((1/13) + (1/13)*(i==10)*3) + expectation
+                expectation = expectation + (1/13) * expect_dict["soft"].loc[p + 11, d]
             if p >= 11:
                 for i in range(1, 21-p+1):
-                    expectation = Expectation(p+i, d, 'hard', dtype) * ((1/13) + (1/13)*(i==10)*3) + expectation
+                    expectation = expect_dict["hard"].loc[p+i, d] * ((1/13) + (1/13)*(i==10)*3) + expectation
                 for i in range(21-p+1, 11):
                     expectation = expectation + ((1/13) + (1/13)*(i==10)*3) * (-1)
 
         if ptype == 'soft':
             if p == 11:
                 for i in range(1, 11):
-                    expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
+                    expectation = expectation + expect_dict["soft"].loc[p+i, d] * ((1/13) + (1/13)*(i==10)*3)
 
             if p >= 12:
                 for i in range(1, 21-p+1):
-                    expectation = expectation + Expectation(p+i, d, 'soft', dtype) * ((1/13) + (1/13)*(i==10)*3)
+                    expectation = expectation + expect_dict["soft"].loc[p+i, d] * ((1/13) + (1/13)*(i==10)*3)
                 for j in range(21-p+1, 11):
-                    expectation = Expectation(p+j-10, d, 'hard', dtype) * ((1/13) + (1/13)*(j==10)*3) + expectation
+                    expectation = expect_dict["hard"].loc[p+j-10, d] * ((1/13) + (1/13)*(j==10)*3) + expectation
         return expectation
     else:
         return expect_dict[ptype+"_hit"].loc[p, d]
@@ -193,13 +193,13 @@ def splitExpectation(p, d, ptype, dtype):
             if i == 1:
                 expectation += BJ_standingExpectation(d, dtype)*p_next
             else:
-                expectation += Expectation(10+i, d, ptype, dtype)*(p_next + p_next*(i == 10) * 3)
+                expectation += expect_dict["hard"].loc[10+i, d]*(p_next + p_next*(i == 10) * 3)
     else:
         for i in range(1, 11):
             if i == 1:
-                expectation += Expectation(int(p / 2)+11, d, "soft", dtype)*p_next
+                expectation += expect_dict["soft"].loc[int(p / 2)+11, d]*p_next
             else:
-                expectation += Expectation(int(p / 2)+i, d, "hard", dtype)*(p_next + p_next*(i == 10) * 3)
+                expectation += expect_dict["hard"].loc[int(p / 2)+i, d]*(p_next + p_next*(i == 10) * 3)
 
     return expectation
 
