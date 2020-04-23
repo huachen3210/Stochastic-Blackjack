@@ -7,7 +7,7 @@ import random as rn
 
 
 strategyTables = ['output/hard_table.csv', 'output/soft_table.csv', 'output/pair_table.csv']
-#strategyTables = ['strategy_compare/Hard_Table_Strategy.csv', 'strategy_compare/Soft_Table_Strategy.csv', 'strategy_compare/Pair_Table_Strategy.csv']
+#strategyTables = ['Basic_strategy_baseline/Hard_Table_Strategy.csv', 'Basic_strategy_baseline/Soft_Table_Strategy.csv', 'Basic_strategy_baseline/Pair_Table_Strategy.csv']
 
 
 hard_table = tableToDic(strategyTables[0])

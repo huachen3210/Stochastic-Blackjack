@@ -24,7 +24,6 @@ def tableToDic(fileName):
 
     row = list(table.iloc[:,0])
 
-
     dic = {}
 
     for i in range(len(row)):
