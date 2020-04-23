@@ -2,8 +2,6 @@ __author__ = 'gecheng'
 
 import random as rn
 
-import random as rn
-
 class blackJackGame():
     # initial the game
     def __init__(self, player_num):

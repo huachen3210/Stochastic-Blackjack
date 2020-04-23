@@ -1,6 +1,6 @@
 __author__ = 'gecheng'
 
-from output.tableToDictionary import tableToDic
+from utils import tableToDic
 from blackJack import blackJackGame
 import random as rn
 
