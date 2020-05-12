@@ -5,42 +5,67 @@ from blackJack import blackJackGame
 import random as rn
 
 
+ratios = [i/100 for i in range(20,35)]
 
-#strategyTables = ['outputV1.0/hard_table.csv', 'outputV1.0/soft_table.csv', 'outputV1.0/pair_table.csv']
-#strategyTables = ['Basic_strategy_baseline/Hard_Table_Strategy.csv', 'Basic_strategy_baseline/Soft_Table_Strategy.csv', 'Basic_strategy_baseline/Pair_Table_Strategy.csv']
+strategyTablesDic = dict()
+
+for i in range(len(ratios)):
+    #print('multiPlayer/output_' + str(ratios[i])+'/hard_table_' + str(ratios[i]) + '.csv')
+    strategyTables = ['multiPlayer/output_' + str(ratios[i])+'/hard_table_' + str(ratios[i]) + '.csv', 'multiPlayer/output_' + str(ratios[i])+'/soft_table_' + str(ratios[i]) + '.csv', 'multiPlayer/output_' + str(ratios[i])+'/pair_table_' + str(ratios[i]) + '.csv']
+    hard_table = tableToDic(strategyTables[0])
+    soft_table = tableToDic(strategyTables[1])
+    pair_table = tableToDic(strategyTables[2])
+
+    strategyTablesDic[ratios[i]] = {}
+    strategyTablesDic[ratios[i]]['hard'] = hard_table
+    strategyTablesDic[ratios[i]]['soft'] = soft_table
+    strategyTablesDic[ratios[i]]['pair'] = pair_table
 
 
-strategyTables = ['multiPlayer/output_0.3/hard_table_0.3.csv', 'multiPlayer/output_0.3/soft_table_0.3.csv', 'multiPlayer/output_0.3/pair_table_0.3.csv']
+
+'''
+#strategyTables = ['output/hard_table.csv', 'output/soft_table.csv', 'output/pair_table.csv']
+strategyTables = ['Basic_strategy_baseline/Hard_Table_Strategy.csv', 'Basic_strategy_baseline/Soft_Table_Strategy.csv', 'Basic_strategy_baseline/Pair_Table_Strategy.csv']
 
 
 hard_table = tableToDic(strategyTables[0])
 soft_table = tableToDic(strategyTables[1])
 pair_table = tableToDic(strategyTables[2])
 
+
 table_dic = {}
 table_dic['hard'] = hard_table
 table_dic['soft'] = soft_table
 table_dic['pair'] = pair_table
 
+'''
 
-def playerOperation(bl, ip, table_dic):
 
-    '''
+
+def playerOperation(bl, ip, strategyTablesDic, insurance  = False):
+
     if ip <= 3:
         return 'hit'
 
+    cardStrings = ''.join(bl.cards)
+    tenRatio = (cardStrings.count('T') + cardStrings.count('J') + cardStrings.count('Q') + cardStrings.count('K'))/len(bl.cards)
 
     if insurance == True:
         if bl.dealer[0][0] == 'A':
-            cardStrings = ''.join(bl.cards)
-            if (cardStrings.count('T') + cardStrings.count('J') + cardStrings.count('Q') + cardStrings.count('K'))/len(bl.cards) >= 1/3:
+            if tenRatio >= 1/3:
                 return 'ins'
             else:
                 return  'notIns'
 
-    '''
+    tenRatio = round(tenRatio, 2)
 
-    ### calculate the hand point of player
+    if tenRatio < 0.2:
+        tenRatio = 0.2
+    elif tenRatio > 0.34:
+        tenRatio = 0.34
+
+    table_dic = strategyTablesDic[tenRatio]
+
     point = 0
     An = 0
     for card in bl.players[ip]:
@@ -59,7 +84,6 @@ def playerOperation(bl, ip, table_dic):
         type = 'soft'
 
 
-    # calculate hand point of dealer
     dealerPoint = 0
     card = bl.dealer[0]
     if card[0] in ['T' , 'J', 'Q', 'K']:
@@ -73,7 +97,7 @@ def playerOperation(bl, ip, table_dic):
     if len(bl.players[ip]) == 2 and bl.players[ip][0][0] == bl.players[ip][1][0] and bl.split[ip] == 0:
 
         if bl.players[ip][0][0] == 'A':
-            tempPoint = 12
+            tempPoint = 22
         else:
             tempPoint = point
 
@@ -102,16 +126,25 @@ def playerOperation(bl, ip, table_dic):
 
 
 
+
+
 rn.seed(1)
 finalScores = []
 finalBets = []
 
-for i in range(50000):
 
-    bl =  blackJackGame(1, [1])
+for i in range(10000):
+
+    bl = blackJackGame(5, [0.001, 0.001, 0.001, 0.001, 4.996])
+
     for ip, player in enumerate(bl.players):
+
+        ins_ope = playerOperation(bl, ip, strategyTablesDic, True)
+        if ins_ope == 'ins':
+            bl.playerOperation(ip, 'ins')
+
         while bl.standings[ip] == 0 and bl.bust[ip] == 0:
-            ope = playerOperation(bl, ip, table_dic)
+            ope = playerOperation(bl, ip, strategyTablesDic)
             bl.playerOperation(ip, ope)
             #if bl.bust[ip] == 0 and bl.standings[ip] == 0:
             #    ope = playerOperation(bl, ip, table_dic)
