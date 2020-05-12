@@ -4,7 +4,7 @@ import random as rn
 
 class blackJackGame():
     # initial the game
-    def __init__(self, player_num):
+    def __init__(self, player_num, bets):
 
         # initial two deck of cards
         self.cards = []
@@ -22,9 +22,12 @@ class blackJackGame():
         self.standings = []
         self.bust = []
         self.split = []
+        self.insurance = []
+        self.insuranceBet = []
 
 
         for id in range(player_num):
+
             # initial players as list, each player draw two cards
             index = rn.sample(range(len(self.cards)),1)
             self.players.append([self.cards.pop(index[0])])
@@ -35,7 +38,7 @@ class blackJackGame():
             self.points.append(0)
 
             # bet for each player
-            self.bets.append(1)
+            self.bets.append(bets[id])
 
             # whether player standing
             self.standings.append(0)
@@ -46,6 +49,9 @@ class blackJackGame():
             # whether player split
             self.split.append(0)
 
+            # whether insurance
+            self.insurance.append(0)
+            self.insuranceBet.append(0)
 
 
         # initial dealer hands, draw two cards
@@ -53,7 +59,6 @@ class blackJackGame():
         self.dealer = [self.cards.pop(index[0])]
         index = rn.sample(range(len(self.cards)),1)
         self.dealer.append(self.cards.pop(index[0]))
-
 
 
         # whether dealer bust
@@ -67,6 +72,10 @@ class blackJackGame():
 
         # the final score for the player
         self.finalScore = 0
+
+        # the total betting
+        self.totalBetting = 0
+
 
     # get the operation for ip th player
     def playerOperation(self, ip, ope):
@@ -99,6 +108,8 @@ class blackJackGame():
             self.bust.append(0)
             self.points.append(0)
             self.split.append(1)
+            self.insurance.append(0)
+            self.insuranceBet.append(0)
 
             if self.players[ip][0][0] == 'A':
                 self.playerOperation(ip, 'hit')
@@ -120,9 +131,15 @@ class blackJackGame():
             else:
                 raise Exception(print('Hit Error'))
 
+        # insurance operation
+        if ope == 'ins':
+            self.insurance[ip] = 1
+            self.insuranceBet[ip] = self.bets[ip]/2
+
         # standing operation
         if ope == 'std':
             self.standings[ip] = 1
+
 
     # check whether the game will continue(whether all player have "standing" or "bust")
     def checkStatus(self):
@@ -222,34 +239,44 @@ class blackJackGame():
 
 
 
-    # calculate final score of players
+    # calculate final score and total betting of players
     def finalScoreCal(self):
-        for ip, player in enumerate(self.players):
-            if self.bust[ip] == 1:
-                self.finalScore =self.finalScore + (-1) * self.bets[ip]
 
-            if self.bust[ip] == 0:
-                if self.dealerBust == 0:
-                    if self.dealerPoint > self.points[ip]:
-                        self.finalScore = self.finalScore - self.bets[ip]
-                    elif self.dealerPoint < self.points[ip]:
+
+        for ip, player in enumerate(self.players):
+
+            self.totalBetting = self.totalBetting + self.bets[ip] + self.insuranceBet[ip]
+
+            self.finalScore = self.finalScore - self.insuranceBet[ip]
+
+            if self.dealerPoint == self.points[ip] and self.dealerPoint == 21 and self.insurance[ip] == 1:
+                self.finalScore = self.finalScore + 0
+            else:
+                if self.bust[ip] == 1:
+                    self.finalScore =self.finalScore + (-1) * self.bets[ip]
+
+                if self.bust[ip] == 0:
+                    if self.dealerBust == 0:
+                        if self.dealerPoint > self.points[ip]:
+                            self.finalScore = self.finalScore - self.bets[ip]
+                        elif self.dealerPoint < self.points[ip]:
+                            if len(self.players[ip]) == 2 and self.points[ip] == 21:
+                                self.finalScore = self.finalScore + self.bets[ip]*1.5
+                            else:
+                                self.finalScore = self.finalScore + self.bets[ip]
+
+                        elif self.dealerPoint == self.points[ip] and self.dealerPoint == 21:
+                            if len(self.players[ip]) == 2:
+                                if len(self.dealer) != 2:
+                                    self.finalScore = self.finalScore + 1.5 * self.bets[ip]
+                            elif len(self.players[ip]) != 2:
+                                if len(self.dealer) == 2:
+                                    self.finalScore = self.finalScore - self.bets[ip]
+
+                    elif self.dealerBust == 1:
                         if len(self.players[ip]) == 2 and self.points[ip] == 21:
                             self.finalScore = self.finalScore + self.bets[ip]*1.5
                         else:
                             self.finalScore = self.finalScore + self.bets[ip]
-
-                    elif self.dealerPoint == self.points[ip] and self.dealerPoint == 21:
-                        if len(self.players[ip]) == 2:
-                            if len(self.dealer) != 2:
-                                self.finalScore = self.finalScore + 1.5 * self.bets[ip]
-                        elif len(self.players[ip]) != 2:
-                            if len(self.dealer) == 2:
-                                self.finalScore = self.finalScore - self.bets[ip]
-
-                elif self.dealerBust == 1:
-                    if len(self.players[ip]) == 2 and self.points[ip] == 21:
-                        self.finalScore = self.finalScore + self.bets[ip]*1.5
-                    else:
-                        self.finalScore = self.finalScore + self.bets[ip]
 
 
