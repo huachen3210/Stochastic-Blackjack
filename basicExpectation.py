@@ -3,21 +3,22 @@ __author__ = ['gecheng', "Huachen Ren"]
 import time
 from MyDataBase import *
 
+
 ### calculate bust probability of dealer
 ##########################
 # d: point of dealer
 # type : type of point for dealer     soft or hard
 ##########################
-def dealerBustProb(d, type):
+def dealerBustProb(d, type, trans_prob):
     bustProb = 0
     if type == 'hard':
         if d <= 10:
             for i in range(2, 11):
-                bustProb = dealerBustProb(d + i, 'hard') * trans_prob[i-1] + bustProb
-            bustProb = bustProb + trans_prob[0] * dealerBustProb(d + 11, 'soft')
+                bustProb = dealerBustProb(d + i, 'hard', trans_prob) * trans_prob[i-1] + bustProb
+            bustProb = bustProb + trans_prob[0] * dealerBustProb(d + 11, 'soft', trans_prob)
         if d >= 11 and d <= 16:
             for i in range(1, 16 - d + 1):
-                bustProb = dealerBustProb(d + i, 'hard') * trans_prob[i-1] + bustProb
+                bustProb = dealerBustProb(d + i, 'hard', trans_prob) * trans_prob[i-1] + bustProb
             for i in range(11):
                 if d+i>21:
                     bustProb += trans_prob[i-1]
@@ -27,17 +28,17 @@ def dealerBustProb(d, type):
     if type == 'soft':
         if d == 11:
             for i in range(1, 16-d+1):
-                bustProb = dealerBustProb(d+i, 'soft') * trans_prob[i-1] + bustProb
+                bustProb = dealerBustProb(d+i, 'soft', trans_prob) * trans_prob[i-1] + bustProb
 
         if d >= 12 and d <= 15:
             for i in range(1, 16-d+1):
-                bustProb = dealerBustProb(d+i, 'soft') * trans_prob[i-1] + bustProb
+                bustProb = dealerBustProb(d+i, 'soft', trans_prob) * trans_prob[i-1] + bustProb
 
             for j in range(21-d+1, 11):
-                bustProb = bustProb + trans_prob[j-1]*dealerBustProb(d+j-10, 'hard')
+                bustProb = bustProb + trans_prob[j-1]*dealerBustProb(d+j-10, 'hard', trans_prob)
         if d == 16:
             for j in range(21-d+1, 11):
-                bustProb = bustProb + trans_prob[j-1]*dealerBustProb(d+j-10, 'hard')
+                bustProb = bustProb + trans_prob[j-1]*dealerBustProb(d+j-10, 'hard', trans_prob)
 
     return bustProb
 
@@ -49,16 +50,16 @@ def dealerBustProb(d, type):
 # g: a value from 17 to 21
 # type : type of point for dealer    soft or hard
 ##########################
-def dealerStanding(d, g, type):
+def dealerStanding(d, g, type, trans_prob):
     standingProb = 0
     if type == 'hard':
         if d <= 10:
             for i in range(2,11):
-                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'hard') + standingProb
-            standingProb = trans_prob[0]*dealerStanding(d+11, g, 'soft') + standingProb
+                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'hard', trans_prob) + standingProb
+            standingProb = trans_prob[0]*dealerStanding(d+11, g, 'soft', trans_prob) + standingProb
         if d >= 11 and d <= 16:
             for i in range(1,21 - d + 1):
-                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'hard') + standingProb
+                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'hard', trans_prob) + standingProb
         if d >= 17 and d <= 21:
             if d == g:
                 standingProb = 1
@@ -68,15 +69,15 @@ def dealerStanding(d, g, type):
     if type == 'soft':
         if d == 11:
             for i in range(2,11):
-                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'soft') + standingProb
-            standingProb  =  trans_prob[0]*dealerStanding(d+1, g, 'soft') + standingProb
+                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'soft', trans_prob) + standingProb
+            standingProb  =  trans_prob[0]*dealerStanding(d+1, g, 'soft', trans_prob) + standingProb
 
         if d >= 12 and d <= 16:
             for i in range(1, 21 - d + 1):
-                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'soft') + standingProb
+                standingProb = trans_prob[i-1] * dealerStanding(d + i, g, 'soft', trans_prob) + standingProb
 
             for j in range(21-d+1,11):
-                standingProb = trans_prob[j-1] * dealerStanding(d + j - 10, g, 'hard') + standingProb
+                standingProb = trans_prob[j-1] * dealerStanding(d + j - 10, g, 'hard', trans_prob) + standingProb
 
         if d >= 17 and d <= 21:
             if d == g:
@@ -96,30 +97,30 @@ def dealerStanding(d, g, type):
 # ptype : type of point for player        soft or hard
 # type : type of point for dealer        soft or hard
 ##########################
-def standingExpectation(p, d, ptype, dtype):
+def standingExpectation(p, d, ptype, dtype, trans_prob):
     # check whether the expecation was computed
     if expect_dict[ptype+"_stand"].loc[p, d] == 0:
         expectation = 0
-        expectation = dealerBustProb(d, dtype) * 1 + expectation
+        expectation = dealerBustProb(d, dtype, trans_prob) * 1 + expectation
         for j in range(17, 22):
             if j < p:
-                expectation = dealerStanding(d, j, dtype) * 1 + expectation
+                expectation = dealerStanding(d, j, dtype, trans_prob) * 1 + expectation
             elif j > p:
-                expectation = dealerStanding(d, j, dtype) * (-1) + expectation
+                expectation = dealerStanding(d, j, dtype, trans_prob) * (-1) + expectation
         expect_dict[ptype + "_stand"].loc[p, d] = expectation
         return expectation
 
     else:
         return expect_dict[ptype+"_stand"].loc[p, d]
 
-def BJ_standingExpectation(d, dtype):
+def BJ_standingExpectation(d, dtype, trans_prob):
     """
     Calculate expectation after the player get blackjack and stand
     """
     expectation = 0
-    expectation = dealerBustProb(d, dtype) * 1.5 + expectation
+    expectation = dealerBustProb(d, dtype, trans_prob) * 1.5 + expectation
     for j in range(17, 21):
-        expectation = dealerStanding(d, j, dtype) * 1.5 + expectation
+        expectation = dealerStanding(d, j, dtype, trans_prob) * 1.5 + expectation
     return expectation
 
 
@@ -131,7 +132,7 @@ def BJ_standingExpectation(d, dtype):
 # ptype : type of point for player        soft or hard
 # type : type of point for dealer        soft or hard
 ##########################
-def hitExpectation(p, d, ptype, dtype):
+def hitExpectation(p, d, ptype, dtype, trans_prob):
     # check whether the expecation was computed
     if expect_dict[ptype+"_hit"].loc[p, d] == 0:
         expectation = 0
@@ -162,44 +163,44 @@ def hitExpectation(p, d, ptype, dtype):
         return expect_dict[ptype+"_hit"].loc[p, d]
 
 
-def doubleExpectation(p, d, ptype, dtype):
+def doubleExpectation(p, d, ptype, dtype, trans_prob):
     expectation = 0
     if ptype == "hard":
         # not bust
         for i in range(2, min(21-p+1, 11)):
-            expectation += 2*standingExpectation(p+i, d, ptype, dtype)*trans_prob[i-1]
+            expectation += 2*standingExpectation(p+i, d, ptype, dtype, trans_prob)*trans_prob[i-1]
         # get A, convert to soft
         if p<=10:
-            expectation += 2*standingExpectation(p+11, d, "soft", dtype)*trans_prob[0]
+            expectation += 2*standingExpectation(p+11, d, "soft", dtype, trans_prob)*trans_prob[0]
         # get A, hard
         elif p<21:
-            expectation += 2*standingExpectation(p+1, d, ptype, dtype)*trans_prob[0]
+            expectation += 2*standingExpectation(p+1, d, ptype, dtype, trans_prob)*trans_prob[0]
         # bust
         for i in range(min(21-p+1, 11), 11):
             expectation += -2*trans_prob[i-1]
     else:
         # Since When only have one A, you can't choose double, we don't consider p=11
         for i in range(1, 21 - p + 1):
-            expectation += 2*standingExpectation(p + i, d, ptype, dtype) * trans_prob[i-1]
+            expectation += 2*standingExpectation(p + i, d, ptype, dtype, trans_prob) * trans_prob[i-1]
         for j in range(21 - p + 1, 11):
-            expectation += 2*standingExpectation(p + j - 10, d, 'hard', dtype) * trans_prob[j-1]
+            expectation += 2*standingExpectation(p + j - 10, d, 'hard', dtype, trans_prob) * trans_prob[j-1]
     return expectation
 
 
 
-def splitExpectation(p, d, ptype, dtype):
+def splitExpectation(p, d, ptype, dtype, trans_prob):
     expectation = 0
     if ptype == "soft":
         # If split 2 A, then must get one more card and stand
         for j in range(1, 11):
             if j == 10:
-                expectation += BJ_standingExpectation(d, dtype)*trans_prob[9]
+                expectation += BJ_standingExpectation(d, dtype, trans_prob)*trans_prob[9]
             else:
-                expectation += standingExpectation(11+j, d, ptype, dtype)*trans_prob[j-1]
+                expectation += standingExpectation(11+j, d, ptype, dtype, trans_prob)*trans_prob[j-1]
     elif p == 20:
         for i in range(1, 11):
             if i == 1:
-                expectation += BJ_standingExpectation(d, dtype)*trans_prob[0]
+                expectation += BJ_standingExpectation(d, dtype, trans_prob)*trans_prob[0]
             else:
                 expectation += expect_dict["hard"].loc[10+i, d]*trans_prob[i-1]
     else:
@@ -211,14 +212,14 @@ def splitExpectation(p, d, ptype, dtype):
 
     return 2*expectation
 
-def Expectation(p, d, ptype, dtype):
+def Expectation(p, d, ptype, dtype, trans_prob):
     # check whether the strategy was computed
     if strat_dict[ptype].loc[p, d] == "0":
         # First check whether expectation exists. If not
         # Compute hit expectation and stand expectation
         if expect_dict[ptype+"_hit"].loc[p, d] == 0:
             # have not calculate hit expectation
-            hit_expect = hitExpectation(p, d, ptype, dtype)
+            hit_expect = hitExpectation(p, d, ptype, dtype, trans_prob)
             expect_dict[ptype+"_hit"].loc[p, d] = hit_expect
 
         else:
@@ -226,7 +227,7 @@ def Expectation(p, d, ptype, dtype):
 
         if expect_dict[ptype+"_stand"].loc[p, d] == 0:
             # have not calculate stand expectation
-            stand_expect = standingExpectation(p, d, ptype, dtype)
+            stand_expect = standingExpectation(p, d, ptype, dtype, trans_prob)
             expect_dict[ptype+"_stand"].loc[p, d] = stand_expect
         else:
             stand_expect = expect_dict[ptype+"_stand"].loc[p, d]
@@ -252,6 +253,10 @@ def Expectation(p, d, ptype, dtype):
 if __name__ == "__main__":
 
     s = time.time()
+    # Probability of drawing 10, 11, 12, or 13
+    p_10 = 0.33
+    # probability of drawing each value
+    trans_prob = [(1 - p_10) / 9] * 9 + [p_10]
 
     p = 13
     d = 11
@@ -259,12 +264,12 @@ if __name__ == "__main__":
     split_ind = False
     ptype = "hard"
     dtype = "soft"
-    print("hit expectation is ", hitExpectation(p, d, ptype, dtype))
-    print("stand expectation is ", standingExpectation(p, d, ptype, dtype))
+    print("hit expectation is ", hitExpectation(p, d, ptype, dtype, trans_prob))
+    print("stand expectation is ", standingExpectation(p, d, ptype, dtype, trans_prob))
     if double_ind:
-        print("double expectation is ", doubleExpectation(p, d, ptype, dtype))
+        print("double expectation is ", doubleExpectation(p, d, ptype, dtype, trans_prob))
     if split_ind:
-        print("split expectation is ", splitExpectation(p, d, ptype, dtype))
+        print("split expectation is ", splitExpectation(p, d, ptype, dtype, trans_prob))
 
     print("strategy table")
     print(strat_dict[ptype])

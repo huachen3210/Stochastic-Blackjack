@@ -12,13 +12,19 @@ hard_player_value = list(range(4,22))
 soft_player_value = list(range(12,22))
 pair_value = [4,6,8,10,12,14,16,18,20,22]
 
-# probability of draw next card
 
-#p_next = 1/13
-p_10 = 4/13
-trans_prob = [(1-p_10)/9]*9+[p_10]
 global strat_dict
 global expect_dict
+global hard_strat_df
+global soft_strat_df
+global strat_dict
+global hard_expect_df
+global soft_expect_df
+global pair_expect_df
+global standing_hard_expect_df
+global hit_hard_expect_df
+global standing_soft_expect_df
+global hit_soft_expect_df
 
 # Initialize table to store the strategy
 hard_strat_df = pd.DataFrame("0", columns=card_value, index=hard_player_value)
