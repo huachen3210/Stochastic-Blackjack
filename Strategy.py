@@ -1,3 +1,5 @@
+__author__ = 'Huachen Ren'
+
 import os
 import time
 from MyDataBase import *

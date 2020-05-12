@@ -5,7 +5,7 @@ from blackJack import blackJackGame
 import random as rn
 
 
-ratios = [i/100 for i in range(20,35)]
+ratios = [i/100 for i in range(20,34)]
 
 strategyTablesDic = dict()
 
