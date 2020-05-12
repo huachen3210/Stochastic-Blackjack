@@ -5,7 +5,6 @@ from blackJack import blackJackGame
 import random as rn
 
 
-
 strategyTables = ['output/hard_table.csv', 'output/soft_table.csv', 'output/pair_table.csv']
 #strategyTables = ['Basic_strategy_baseline/Hard_Table_Strategy.csv', 'Basic_strategy_baseline/Soft_Table_Strategy.csv', 'Basic_strategy_baseline/Pair_Table_Strategy.csv']
 
@@ -85,7 +84,7 @@ rn.seed(1)
 
 finalScores = []
 
-for i in range(100000):
+for i in range(200000):
     bl = blackJackGame(1)
     while bl.finish == 0:
         for ip, player in enumerate(bl.players):

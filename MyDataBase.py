@@ -14,7 +14,9 @@ pair_value = [4,6,8,10,12,14,16,18,20,22]
 
 # probability of draw next card
 
-p_next = 1/13
+#p_next = 1/13
+p_10 = 4/13
+trans_prob = [(1-p_10)/9]*9+[p_10]
 global strat_dict
 global expect_dict
 
@@ -33,7 +35,6 @@ standing_hard_expect_df = pd.DataFrame(0, columns=card_value, index=hard_player_
 hit_hard_expect_df = pd.DataFrame(0, columns=card_value, index=hard_player_value)
 standing_soft_expect_df = pd.DataFrame(0, columns=card_value, index=soft_player_value)
 hit_soft_expect_df = pd.DataFrame(0, columns=card_value, index=soft_player_value)
-
 expect_dict = {"hard":hard_expect_df, "soft":soft_expect_df, "pair":pair_expect_df,
                "hard_stand": standing_hard_expect_df, "hard_hit":hit_hard_expect_df,
                "soft_stand":standing_soft_expect_df, "soft_hit":hit_soft_expect_df}
