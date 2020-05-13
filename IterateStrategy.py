@@ -7,7 +7,7 @@ from Strategy import Search_opt_strat
 #begin_p10 = 0.2
 #end_p10 = 0.34
 #step_size = 0.01
-range_10 =[0.33]
+range_10 =[0.2]
 #range_10 = np.concatenate([range_10, np.array([4/13])])
 
 s = time.time()

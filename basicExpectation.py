@@ -19,7 +19,7 @@ def dealerBustProb(d, type, trans_prob):
         if d >= 11 and d <= 16:
             for i in range(1, 16 - d + 1):
                 bustProb = dealerBustProb(d + i, 'hard', trans_prob) * trans_prob[i-1] + bustProb
-            for i in range(11):
+            for i in range(1, 11):
                 if d+i>21:
                     bustProb += trans_prob[i-1]
             #bustProb = bustProb + (abs(10 - (21-d)) + 3) * (10 > (21-d))/13
@@ -107,7 +107,7 @@ def standingExpectation(p, d, ptype, dtype, trans_prob):
                 expectation = dealerStanding(d, j, dtype, trans_prob) * 1 + expectation
             elif j > p:
                 expectation = dealerStanding(d, j, dtype, trans_prob) * (-1) + expectation
-        expect_dict[ptype + "_stand"].loc[p, d] = expectation
+        #expect_dict[ptype + "_stand"].loc[p, d] = expectation
         return expectation
 
     else:
@@ -157,7 +157,7 @@ def hitExpectation(p, d, ptype, dtype, trans_prob):
                     expectation = expectation + expect_dict["soft"].loc[p+i, d] * trans_prob[i-1]
                 for j in range(21-p+1, 11):
                     expectation = expect_dict["hard"].loc[p+j-10, d] * trans_prob[j-1] + expectation
-        expect_dict[ptype + "_hit"].loc[p, d] = expectation
+        #expect_dict[ptype + "_hit"].loc[p, d] = expectation
         return expectation
     else:
         return expect_dict[ptype+"_hit"].loc[p, d]

@@ -3,14 +3,15 @@ __author__ = 'gecheng'
 from utils import tableToDic
 from blackJack import blackJackGame
 import random as rn
+import numpy as np
 
 
 
-#strategyTables = ['outputV1.0/hard_table.csv', 'outputV1.0/soft_table.csv', 'outputV1.0/pair_table.csv']
+strategyTables = ['outputV1.0/hard_table.csv', 'outputV1.0/soft_table.csv', 'outputV1.0/pair_table.csv']
 #strategyTables = ['Basic_strategy_baseline/Hard_Table_Strategy.csv', 'Basic_strategy_baseline/Soft_Table_Strategy.csv', 'Basic_strategy_baseline/Pair_Table_Strategy.csv']
 
 
-strategyTables = ['multiPlayer/output_0.3/hard_table_0.3.csv', 'multiPlayer/output_0.3/soft_table_0.3.csv', 'multiPlayer/output_0.3/pair_table_0.3.csv']
+#strategyTables = ['multiPlayer/output_0.3/hard_table_0.3.csv', 'multiPlayer/output_0.3/soft_table_0.3.csv', 'multiPlayer/output_0.3/pair_table_0.3.csv']
 
 
 hard_table = tableToDic(strategyTables[0])
@@ -102,13 +103,14 @@ def playerOperation(bl, ip, table_dic):
 
 
 
-rn.seed(1)
+rn.seed(123)
 finalScores = []
 finalBets = []
 
-for i in range(50000):
+for i in range(100000):
 
-    bl =  blackJackGame(1, [1])
+    #bl =  blackJackGame(1, [1])
+    bl = blackJackGame(5, [1, 1, 1, 1, 1])
     for ip, player in enumerate(bl.players):
         while bl.standings[ip] == 0 and bl.bust[ip] == 0:
             ope = playerOperation(bl, ip, table_dic)
@@ -145,10 +147,26 @@ for i in range(50000):
     finalScores.append(bl.finalScore)
     finalBets.append(bl.totalBetting)
 
-print("total Score")
-print(sum(finalScores)/sum(finalBets))
+# change to numpy array for calculation
+finalScores = np.array(finalScores)
+finalBets = np.array(finalBets)
+print("average return per bet is %s"%(np.sum(finalScores)/np.sum(finalBets)))
 
+n = len(finalScores)
+win_number = np.sum(finalScores>0)
+lose_number = np.sum(finalScores<0)
+draw_number = np.sum(finalScores==0)
 
+print("winning ratio %s, lose ratio%s, draw ratio%s"%(win_number/n, lose_number/n, draw_number/n))
+
+returnScores = np.divide(finalScores, finalBets)
+avg_return = np.average(returnScores)
+std_return = np.std(returnScores)
+print("average return is %s"%(avg_return))
+print("standard deviation of return %s, std of absolute reward %s"%(std_return/np.sqrt(n), np.std(finalScores)/np.sqrt(n)))
+
+print("sharp ratio %s"%(avg_return/std_return))
+print("maximum return %s,  minimum return %s"%(np.max(returnScores), np.min(returnScores)))
 
 
 

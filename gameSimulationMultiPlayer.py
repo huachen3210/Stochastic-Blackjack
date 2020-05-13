@@ -3,9 +3,10 @@ __author__ = 'gecheng'
 from utils import tableToDic
 from blackJack import blackJackGame
 import random as rn
+import numpy as np
 
 
-ratios = [i/100 for i in range(20,34)]
+ratios = [i/100 for i in range(20,35)]
 
 strategyTablesDic = dict()
 
@@ -128,12 +129,12 @@ def playerOperation(bl, ip, strategyTablesDic, insurance  = False):
 
 
 
-rn.seed(1)
+rn.seed(123)
 finalScores = []
 finalBets = []
 
 
-for i in range(10000):
+for i in range(100000):
 
     bl = blackJackGame(5, [0.001, 0.001, 0.001, 0.001, 4.996])
 
@@ -178,9 +179,26 @@ for i in range(10000):
     finalScores.append(bl.finalScore)
     finalBets.append(bl.totalBetting)
 
-print("total Score")
-print(sum(finalScores)/sum(finalBets))
+# change to numpy array for calculation
+finalScores = np.array(finalScores)
+finalBets = np.array(finalBets)
+print("average return per bet is %s"%(np.sum(finalScores)/np.sum(finalBets)))
 
+n = len(finalScores)
+win_number = np.sum(finalScores>0)
+lose_number = np.sum(finalScores<0)
+draw_number = np.sum(finalScores==0)
+
+print("winning ratio %s, lose ratio%s, draw ratio%s"%(win_number/n, lose_number/n, draw_number/n))
+
+returnScores = np.divide(finalScores, finalBets)
+avg_return = np.average(returnScores)
+std_return = np.std(returnScores)
+print("average return is %s"%(avg_return))
+print("standard deviation of return %s, std of absolute reward %s"%(std_return/np.sqrt(n), np.std(finalScores)/np.sqrt(n)))
+
+print("sharp ratio %s"%(avg_return/std_return))
+print("maximum return %s,  minimum return %s"%(np.max(returnScores), np.min(returnScores)))
 
 
 
