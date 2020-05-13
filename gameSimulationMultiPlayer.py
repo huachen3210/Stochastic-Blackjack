@@ -5,7 +5,7 @@ from blackJack import blackJackGame
 import random as rn
 
 
-ratios = [i/100 for i in range(20,34)]
+ratios = [i/100 for i in range(20,35)]
 
 strategyTablesDic = dict()
 
@@ -52,7 +52,7 @@ def playerOperation(bl, ip, strategyTablesDic, insurance  = False):
 
     if insurance == True:
         if bl.dealer[0][0] == 'A':
-            if tenRatio >= 1/3:
+            if tenRatio >= 1/2:
                 return 'ins'
             else:
                 return  'notIns'
@@ -128,20 +128,23 @@ def playerOperation(bl, ip, strategyTablesDic, insurance  = False):
 
 
 
-rn.seed(1)
+rn.seed(123)
 finalScores = []
 finalBets = []
 
 
-for i in range(10000):
+for i in range(100000):
 
     bl = blackJackGame(5, [0.001, 0.001, 0.001, 0.001, 4.996])
 
     for ip, player in enumerate(bl.players):
 
-        ins_ope = playerOperation(bl, ip, strategyTablesDic, True)
+        ins_ope = playerOperation(bl, ip, strategyTablesDic, TRUE)
         if ins_ope == 'ins':
             bl.playerOperation(ip, 'ins')
+
+#-0.009916665152618112
+#-0.005064756596292756
 
         while bl.standings[ip] == 0 and bl.bust[ip] == 0:
             ope = playerOperation(bl, ip, strategyTablesDic)
